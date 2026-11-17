@@ -157,7 +157,7 @@ class SAFari:
                     cat = self.categories.get(a["category_id"], {})
                     instances.append({
                         "video_id": vid, "video_name": v["video_name"],
-                        "location_id": v.get("location_id"), "frame_idx": t,
+                        "location_id": _clean(v.get("location_id")), "frame_idx": t,
                         "file_name": file_name, "annotation_id": a["id"],
                         "category_id": a["category_id"], "noun_phrase": a.get("noun_phrase"),
                         **{k.lower(): _clean(cat.get(k)) for k in TAXONOMY_KEYS},
@@ -169,7 +169,7 @@ class SAFari:
                 u = union_rle(rles, h, w)
                 frames.append({
                     "video_id": vid, "video_name": v["video_name"],
-                    "location_id": v.get("location_id"), "frame_idx": t,
+                    "location_id": _clean(v.get("location_id")), "frame_idx": t,
                     "file_name": file_name, "height": h, "width": w,
                     "presence": int(u is not None), "n_instances": len(rles),
                     "union_area": float(mask_utils.area(u)) if u is not None else 0.0,
@@ -196,8 +196,12 @@ def _clean(x):
 
 def split_by_location(location_ids: Iterable[str], val_frac: float = 0.05,
                       seed: int = 0) -> set[str]:
-    """Pick about `val_frac` of the locations for validation, deterministically."""
-    locs = sorted({str(x) for x in location_ids if x is not None})
+    """Pick about `val_frac` of the locations for validation, deterministically.
+
+    Videos without a location ID (NaN in the _ext files) are never candidates, so they stay
+    in training; we cannot tell which camera they come from.
+    """
+    locs = sorted({str(x) for x in location_ids if _clean(x) is not None})
     if not locs:
         raise ValueError("no location IDs; use the _ext annotation files")
     n_val = max(1, round(val_frac * len(locs)))
@@ -212,7 +216,8 @@ def write_splits(path: Path, val_locs: set[str], val_frac: float, seed: int) -> 
 
 
 def assign_split(frames: pd.DataFrame, val_locations: set[str], base: str = "train") -> pd.Series:
-    return np.where(frames["location_id"].astype(str).isin(val_locations), "val", base)
+    loc = frames["location_id"]
+    return np.where(loc.notna() & loc.astype(str).isin(val_locations), "val", base)
 
 
 # --------------------------------------------------------------------------- sampling

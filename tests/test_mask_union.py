@@ -109,3 +109,13 @@ def test_sample_frames_stratified():
     v1 = frames.loc[idx][frames.loc[idx].video_id == 1]
     assert len(v1) == 4 and v1.presence.all()  # no empties, positives fill in
     assert len(set(idx)) == len(idx)
+
+
+def test_missing_locations_never_go_to_validation():
+    import pandas as pd
+    from data.sa_fari import assign_split
+    locs = [f"R{i}" for i in range(40)] + [float("nan"), None]
+    val = split_by_location(locs, 0.5, seed=0)
+    assert "nan" not in val and "None" not in val and len(val) == 20
+    frames = pd.DataFrame({"location_id": [next(iter(val)), float("nan"), None, "zzz"]})
+    assert list(assign_split(frames, val)) == ["val", "train", "train", "train"]
