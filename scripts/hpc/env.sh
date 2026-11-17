@@ -6,7 +6,7 @@ export SAFARI_ROOT="${SAFARI_ROOT:-/scratch/prj/CHANGE_ME/sa_fari}" # dataset ro
 export WORK_DIR="${WORK_DIR:-/scratch/prj/CHANGE_ME/camtrap-loop}"  # outputs, checkpoints, caches
 export VENV="${VENV:-$WORK_DIR/venv}"
 
-# MLflow file store on shared storage, one store for the whole team.
+# MLflow file store on scratch. A plain directory: safe with many SLURM jobs writing at once.
 export MLFLOW_TRACKING_URI="file://$WORK_DIR/mlruns"
 export MLFLOW_ALLOW_FILE_STORE=true   # needed only if MLflow is ever upgraded past 3.x
 export HF_HOME="$WORK_DIR/hf_cache"
