@@ -204,6 +204,13 @@ def split_by_location(location_ids: Iterable[str], val_frac: float = 0.05,
     return set(random.Random(seed).sample(locs, n_val))
 
 
+def write_splits(path: Path, val_locs: set[str], val_frac: float, seed: int) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"val_frac": val_frac, "seed": seed,
+                                "val_locations": sorted(val_locs)}, indent=1) + "\n")
+    print(f"Wrote {len(val_locs)} validation locations to {path}")
+
+
 def assign_split(frames: pd.DataFrame, val_locations: set[str], base: str = "train") -> pd.Series:
     return np.where(frames["location_id"].astype(str).isin(val_locations), "val", base)
 
@@ -256,7 +263,17 @@ def main() -> None:
                    help="Share of training locations held out as validation")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--splits-file", type=Path, default=Path("splits/sa_fari_val_locations.json"))
+    p.add_argument("--splits-only", action="store_true",
+                   help="Only write the validation-location file (light parse, no tables)")
     args = p.parse_args()
+
+    if args.splits_only:
+        with args.ann.open() as f:
+            data = json.load(f, object_hook=lambda o: None if "counts" in o and "size" in o else o)
+        val_locs = split_by_location((v.get("location_id") for v in data["videos"]),
+                                     args.val_frac, args.seed)
+        write_splits(args.splits_file, val_locs, args.val_frac, args.seed)
+        return
 
     ds = SAFari(args.ann)
     frames, inst = ds.tables()
@@ -266,11 +283,7 @@ def main() -> None:
             print(f"Using existing validation locations from {args.splits_file}")
         else:
             val_locs = split_by_location(frames["location_id"], args.val_frac, args.seed)
-            args.splits_file.parent.mkdir(parents=True, exist_ok=True)
-            args.splits_file.write_text(json.dumps(
-                {"val_frac": args.val_frac, "seed": args.seed,
-                 "val_locations": sorted(val_locs)}, indent=1))
-            print(f"Wrote {len(val_locs)} validation locations to {args.splits_file}")
+            write_splits(args.splits_file, val_locs, args.val_frac, args.seed)
         frames["split"] = assign_split(frames, val_locs)
         inst["split"] = assign_split(inst, val_locs)
     else:
