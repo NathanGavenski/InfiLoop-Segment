@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Data, runs and checkpoints never go in git
+datasets/
+mlruns/
+mlartifacts/
+outputs/
+artifacts/
+third_party/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.tar.gz
