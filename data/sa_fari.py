@@ -11,8 +11,7 @@ Two Parquet tables are written per annotation file, and every later stage reads 
   string, presence, location and the boxes and areas of the frame's instances (used by
   small-animal crops). The training loader reads only this table.
 * ``instances_<split>.parquet``: one row per instance per frame with area, bbox, species,
-  taxonomy, video ID, location ID, difficulty tag and the instance's own RLE (for
-  per-instance metrics). Strata are computed from this table.
+  taxonomy, video ID, location ID and the instance's own RLE (for per-instance metrics). Strata are computed from this table.
 
 CLI::
 
@@ -35,9 +34,6 @@ import pandas as pd
 from pycocotools import mask as mask_utils
 
 TAXONOMY_KEYS = ("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-# The SA-FARI card documents no difficulty field. Any of these keys is picked up if a later
-# release adds one; otherwise the column is null and the difficulty stratum is skipped.
-DIFFICULTY_KEYS = ("difficulty", "difficulty_tag", "difficulty_tags", "is_difficult", "hard")
 
 
 # --------------------------------------------------------------------------- RLE helpers
@@ -127,14 +123,6 @@ class SAFari:
         return int(any(a["segmentations"][frame_idx] is not None
                        for a in self.anns_by_video.get(video_id, [])))
 
-    @staticmethod
-    def _difficulty(*dicts: dict) -> str | None:
-        for d in dicts:
-            for k in DIFFICULTY_KEYS:
-                if d.get(k) is not None:
-                    return str(d[k])
-        return None
-
     def tables(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Build the frame table and the instance index."""
         frames, instances = [], []
@@ -165,7 +153,6 @@ class SAFari:
                         "area": float(area),
                         "bbox_x": bbox[0], "bbox_y": bbox[1], "bbox_w": bbox[2], "bbox_h": bbox[3],
                         "height": h, "width": w, "iscrowd": a.get("iscrowd", 0),
-                        "difficulty": self._difficulty(a, v),
                         "rle": rle["counts"].decode("ascii"),
                     })
                 u = union_rle(rles, h, w)
@@ -186,7 +173,7 @@ class SAFari:
 _INSTANCE_COLUMNS = [
     "video_id", "video_name", "location_id", "frame_idx", "file_name", "annotation_id",
     "category_id", "noun_phrase", *[k.lower() for k in TAXONOMY_KEYS], "area",
-    "bbox_x", "bbox_y", "bbox_w", "bbox_h", "height", "width", "iscrowd", "difficulty", "rle",
+    "bbox_x", "bbox_y", "bbox_w", "bbox_h", "height", "width", "iscrowd", "rle",
 ]
 
 
@@ -303,7 +290,7 @@ def main() -> None:
     for s, g in frames.groupby("split"):
         print(f"{s:5s} videos={g.video_id.nunique():6d} locations={g.location_id.nunique():4d} "
               f"frames={len(g):8d} empty={1 - g.presence.mean():.3f}")
-    print(f"instances={len(inst)} difficulty tagged={inst.difficulty.notna().sum()}")
+    print(f"instances={len(inst)}")
 
 
 if __name__ == "__main__":

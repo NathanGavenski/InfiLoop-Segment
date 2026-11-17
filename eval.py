@@ -19,8 +19,7 @@ and `score` compares it with the frame table and instance index. Metrics:
   binary mask cannot be matched to instances
 
 Strata: instance size (COCO 32^2 / 96^2 in original pixels; a frame takes the class of its
-smallest instance), day/night, difficulty (skipped when the annotations carry no tags),
-species (long tail grouped) and flock flag.
+smallest instance), day/night, species (long tail grouped) and flock flag.
 
     python eval.py predict --config configs/b1_dinov3.yaml --ckpt run/best.ckpt --out preds.parquet
     python eval.py score --pred preds.parquet --index-dir $WORK_DIR/index --out metrics.json
@@ -144,9 +143,9 @@ def frame_metrics(pred: pd.DataFrame, frames: pd.DataFrame, instances: pd.DataFr
             inst_rows.append({"video_id": row.video_id, "frame_idx": row.frame_idx,
                               "area": irow["area"], "size": size_class(irow["area"]),
                               "species": irow.get("species") or irow.get("noun_phrase"),
-                              "difficulty": irow.get("difficulty"), "coverage": cov})
+                              "coverage": cov})
     inst_df = pd.DataFrame(inst_rows, columns=["video_id", "frame_idx", "area", "size",
-                                               "species", "difficulty", "coverage"])
+                                               "species", "coverage"])
     df["size"] = _frame_size_class(df, inst_df)
     return df, inst_df
 
@@ -195,15 +194,6 @@ def strata(df: pd.DataFrame, inst_df: pd.DataFrame, flock_videos: set | None,
     if "is_night" in df and df["is_night"].notna().any():
         out["day_night"] = {("night" if k else "day"): s(g)
                             for k, g in df.groupby(df["is_night"].astype(bool))}
-    tagged = inst_df.dropna(subset=["difficulty"])
-    if len(tagged):
-        diff = tagged.groupby(["video_id", "frame_idx"])["difficulty"].agg(
-            lambda x: ",".join(sorted(set(map(str, x)))))
-        keyed = df.set_index(["video_id", "frame_idx"])
-        keyed["difficulty"] = diff.reindex(keyed.index).fillna("untagged")
-        out["difficulty"] = {k: s(g) for k, g in keyed.reset_index().groupby("difficulty")}
-    else:
-        out["difficulty"] = "skipped: no difficulty tags in the annotations"
     if len(inst_df):
         sp = inst_df[["video_id", "frame_idx", "species"]].drop_duplicates()
         counts = sp.species.value_counts()

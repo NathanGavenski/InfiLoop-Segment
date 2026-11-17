@@ -52,7 +52,6 @@ def _toy():
         "area": [float(big.sum()), float(small1.sum()), float(small2.sum())],
         "rle": [encode(big), encode(small1), encode(small2)],
         "species": ["deer", "mouse", "mouse"], "noun_phrase": ["deer", "mouse", "mouse"],
-        "difficulty": [None, None, None],
     })
     # prediction: finds the deer only, a false positive on the empty frame, misses frame 3
     fp = box(0, 10, 0, 10)
@@ -80,7 +79,7 @@ def test_frame_metrics_and_strata():
     assert res["instance_coverage_by_size"]["small"]["instances"] == 2
     assert res["instance_coverage_by_size"]["medium"]["mean_coverage"] == 1.0  # 50x50 px
     assert res["day_night"]["night"]["frames"] == 1
-    assert res["difficulty"].startswith("skipped")
+    assert "difficulty" not in res
     assert res["species"]["mouse"]["frames"] == 2
     assert "long tail (<2 frames)" in res["species"]  # deer appears in one frame
     assert res["flock"]["flagged"]["frames"] == 1
