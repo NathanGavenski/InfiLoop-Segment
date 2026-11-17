@@ -301,7 +301,8 @@ def main() -> None:
     pp.add_argument("--limit-videos", type=int)
     pp.add_argument("--set", nargs="*", default=[], help="config overrides a.b=c")
     sp = sub.add_parser("score")
-    sp.add_argument("--pred", type=Path, required=True)
+    sp.add_argument("--pred", type=Path, nargs="+", required=True,
+                    help="prediction file(s); shards are concatenated")
     sp.add_argument("--index-dir", type=Path, required=True)
     sp.add_argument("--split", default="test", choices=["val", "test"])
     sp.add_argument("--flocks", type=Path, help="JSON from scripts/flag_flocks.py")
@@ -324,7 +325,7 @@ def main() -> None:
     frames = frames[frames["split"] == args.split]
     inst = pd.read_parquet(args.index_dir / f"instances_{split_file}.parquet")
     inst = inst[inst["split"] == args.split]
-    pred = pd.read_parquet(args.pred)
+    pred = pd.concat([pd.read_parquet(x) for x in args.pred], ignore_index=True)
     for c in PRED_COLUMNS:
         if c not in pred:
             pred[c] = np.nan

@@ -17,3 +17,4 @@ third_party/
 *.pth
 *.safetensors
 *.tar.gz
+logs/

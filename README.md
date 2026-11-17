@@ -40,7 +40,28 @@ python scripts/download_safari.py --root $SAFARI_ROOT --frames test train --extr
 ```
 
 The 6 fps frame tarballs are about 3.7 GB (test) and 60.8 GB (train). The script prints the
-exact size and asks for confirmation before downloading any frames.
+exact size and asks for confirmation before downloading any frames. Point
+`data.image_root_*` in `configs/base.yaml` at the folder holding the `sa_fari_XXXXXX/`
+video folders after extraction.
+
+## Running the Phase 1 and 2 pipeline
+
+```bash
+mkdir -p logs                                         # SLURM output directory
+sbatch scripts/hpc/prepare_data.sh                    # frame tables, instance index, resolution study
+sbatch scripts/hpc/train.sh configs/b0_dinov3.yaml    # B0 (also b0_bioclip2, b0_sam3)
+sbatch scripts/hpc/train.sh configs/b1_dinov3.yaml    # B1
+sbatch scripts/hpc/eval.sh  configs/b1_dinov3.yaml val
+sbatch scripts/hpc/b2_sam3.sh                         # B2, sharded; score with eval.py afterwards
+```
+
+Every method writes the same per-frame prediction file, and `eval.py score` computes all
+metrics and strata from it. The validation split (32 of 651 training locations, 5.7% of
+frames) is fixed in `splits/sa_fari_val_locations.json`. The Phase 1 resolution study on
+the full annotations is in `reports/resolution_study.csv`.
+
+Local smoke test without a GPU or real weights: `configs/smoke_b1.yaml` uses a tiny randomly
+initialised encoder (see the comments in that file).
 
 ## MLflow
 
