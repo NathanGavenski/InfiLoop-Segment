@@ -22,7 +22,11 @@ EXPERIMENT_PREFIX = "camtrap-loop"
 
 
 def tracking_uri() -> str:
-    return os.environ.get("MLFLOW_TRACKING_URI", (REPO_ROOT / "mlruns").as_uri())
+    uri = os.environ.get("MLFLOW_TRACKING_URI", (REPO_ROOT / "mlruns").as_uri())
+    if uri.startswith("file:"):
+        # MLflow >= 3.x put the file store in maintenance mode and refuses it unless opted in.
+        os.environ.setdefault("MLFLOW_ALLOW_FILE_STORE", "true")
+    return uri
 
 
 def git_commit() -> dict[str, str]:

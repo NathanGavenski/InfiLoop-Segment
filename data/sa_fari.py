@@ -11,7 +11,8 @@ Two Parquet tables are written per annotation file, and every later stage reads 
   string, presence, location and the boxes and areas of the frame's instances (used by
   small-animal crops). The training loader reads only this table.
 * ``instances_<split>.parquet``: one row per instance per frame with area, bbox, species,
-  taxonomy, video ID, location ID and difficulty tag. Strata are computed from this table.
+  taxonomy, video ID, location ID, difficulty tag and the instance's own RLE (for
+  per-instance metrics). Strata are computed from this table.
 
 CLI::
 
@@ -165,6 +166,7 @@ class SAFari:
                         "bbox_x": bbox[0], "bbox_y": bbox[1], "bbox_w": bbox[2], "bbox_h": bbox[3],
                         "height": h, "width": w, "iscrowd": a.get("iscrowd", 0),
                         "difficulty": self._difficulty(a, v),
+                        "rle": rle["counts"].decode("ascii"),
                     })
                 u = union_rle(rles, h, w)
                 frames.append({
@@ -184,7 +186,7 @@ class SAFari:
 _INSTANCE_COLUMNS = [
     "video_id", "video_name", "location_id", "frame_idx", "file_name", "annotation_id",
     "category_id", "noun_phrase", *[k.lower() for k in TAXONOMY_KEYS], "area",
-    "bbox_x", "bbox_y", "bbox_w", "bbox_h", "height", "width", "iscrowd", "difficulty",
+    "bbox_x", "bbox_y", "bbox_w", "bbox_h", "height", "width", "iscrowd", "difficulty", "rle",
 ]
 
 

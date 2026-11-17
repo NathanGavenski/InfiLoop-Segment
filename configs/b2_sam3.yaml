@@ -1,0 +1,8 @@
+# B2: zero-shot SAM 3.1, prompt "animal", per-frame masks merged (scripts/b2_sam3_zero_shot.py).
+base: base.yaml
+experiment: baselines
+sam3:
+  checkpoint: null          # path to the SAM 3.1 checkpoint; null uses the package default
+  prompt: animal
+  score_threshold: 0.5      # instance masks kept when their score is at least this
+  oracle_species_prompts: false   # true = prompt with GT species names (leaks labels, report apart)

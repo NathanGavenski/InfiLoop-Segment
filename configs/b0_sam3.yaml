@@ -1,0 +1,12 @@
+# B0 with the SAM 3 encoder, fixed at 1008x1008 (frames are padded to a square).
+base: base.yaml
+experiment: baselines
+data:
+  long_side: 1008
+  square: true
+encoder:
+  name: sam3
+  checkpoint: null          # null downloads the gated weights from Hugging Face
+  dtype: bfloat16
+model:
+  kind: b0

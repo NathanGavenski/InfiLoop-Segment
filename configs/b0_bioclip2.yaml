@@ -1,0 +1,9 @@
+# B0 with BioCLIP 2 (ViT-L/14), for the encoder choice on validation.
+base: base.yaml
+experiment: baselines
+encoder:
+  name: bioclip2
+  model_id: hf-hub:imageomics/bioclip-2
+  dtype: bfloat16
+model:
+  kind: b0

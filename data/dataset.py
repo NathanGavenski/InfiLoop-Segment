@@ -41,7 +41,7 @@ class FrameDataset(Dataset):
     def load_image(self, i: int) -> np.ndarray:
         row = self.frames.iloc[i]
         with Image.open(self.image_root / row["file_name"]) as im:
-            img = np.asarray(im.convert("RGB"))
+            img = np.array(im.convert("RGB"))
         if img.shape[:2] != (row["height"], row["width"]):
             raise ValueError(f"{row['file_name']}: image {img.shape[:2]} but annotation "
                              f"{row['height']}x{row['width']}")
@@ -54,9 +54,8 @@ class FrameDataset(Dataset):
         mask = decode(row.get("union_rle"), h, w)
         rng = np.random.default_rng((self.seed, self.epoch, i))
         if self.augment is not None:
-            img, mask = small_animal_crop(img, mask, list(row.get("inst_bboxes", []) or []),
-                                          list(row.get("inst_areas", []) or []),
-                                          self.augment, rng)
+            img, mask = small_animal_crop(img, mask, _as_list(row.get("inst_bboxes")),
+                                          _as_list(row.get("inst_areas")), self.augment, rng)
         image = torch.from_numpy(np.ascontiguousarray(img)).permute(2, 0, 1).float() / 255
         target = torch.from_numpy(np.ascontiguousarray(mask))
         resized = resized_hw(h, w, self.long_side)
@@ -72,6 +71,13 @@ class FrameDataset(Dataset):
             "presence": torch.tensor(float(row["presence"])),
             "index": i, "resized_hw": torch.tensor(resized), "orig_hw": torch.tensor((h, w)),
         }
+
+
+def _as_list(x) -> list:
+    """Parquet list columns come back as numpy arrays (of arrays); None when missing."""
+    if x is None or (isinstance(x, float) and np.isnan(x)):
+        return []
+    return [v.tolist() if isinstance(v, np.ndarray) else v for v in x]
 
 
 def collate(batch: list[dict]) -> dict:

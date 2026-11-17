@@ -1,0 +1,11 @@
+# B1: frozen DINOv3, projection to 512, per-token mask head, upsampling decoder, one pass.
+# Shares every component with the Phase 3 model except the recursive block.
+base: base.yaml
+experiment: baselines
+model:
+  kind: b1
+  hidden: 512
+  rgb_guide: true
+  decoder_channels: [256, 128, 64, 32]
+train:
+  lr: 3.0e-4

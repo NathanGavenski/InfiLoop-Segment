@@ -1,0 +1,48 @@
+# Shared defaults. Experiment configs set `base: base.yaml` and override what they change.
+seed: 0
+output_dir: ${WORK_DIR}/outputs   # expanded by the job scripts; set explicitly when running by hand
+
+data:
+  index_dir: ${WORK_DIR}/index                       # frames_*.parquet, instances_*.parquet
+  image_root_train: ${SAFARI_ROOT}/sa_fari_train/JPEGImages_6fps
+  image_root_test: ${SAFARI_ROOT}/sa_fari_test/JPEGImages_6fps
+  long_side: 1344          # Phase 1 study: smallest long side with >= 99% of train instances >= 1 patch
+  square: false
+  frames_per_video: 4      # per epoch; neighbouring 6 fps frames are near duplicates
+  empty_share: 0.25        # share of each video's draw taken from frames without animals
+  val_frames_per_video: 4
+  num_workers: 8
+
+encoder:
+  name: dinov3
+  model_id: facebook/dinov3-vitl16-pretrain-lvd1689m
+  dtype: bfloat16
+
+augment:
+  hflip: 0.5
+  brightness: 0.15
+  contrast: 0.15
+  saturation: 0.15
+  greyscale: 0.1
+  small_crop: 0.3
+  small_area: 9216         # 96^2, COCO small + medium
+  crop_scale: [0.35, 0.7]
+
+train:
+  epochs: 30
+  batch_size: 8
+  lr: 1.0e-3
+  weight_decay: 0.05
+  betas: [0.9, 0.95]
+  warmup_steps: 200
+  ema_decay: 0.999
+  bce_weight: 1.0
+  dice_weight: 1.0
+  coarse_weight: 0.0
+  grad_clip: 1.0
+  log_every: 50
+  val_every: 1
+
+eval:
+  batch_size: 1            # per-frame latency is measured at batch size 1
+  num_workers: 4
