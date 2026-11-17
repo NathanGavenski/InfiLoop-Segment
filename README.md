@@ -77,6 +77,40 @@ the full annotations is in `reports/resolution_study.csv`.
 Local smoke test without a GPU or real weights: `configs/smoke_b1.yaml` uses a tiny randomly
 initialised encoder (see the comments in that file).
 
+## Next steps
+
+Phases 0 to 2 are written and unit-tested, but nothing has run on the HPC or with real
+weights yet. In order:
+
+- [ ] **Build the image.** `container/build.sh` needs root or fakeroot. Where neither is
+  allowed, run `sudo -E bash container/build.sh camtrap.sif` on a Linux machine (about 7 GB)
+  and copy it to `$WORK_DIR/containers/` on the HPC. Try a rootless build on the HPC first.
+- [ ] **Request access on Hugging Face** to the gated weights:
+  `facebook/dinov3-vitl16-pretrain-lvd1689m`, `facebook/sam3`, and `facebook/sam3.1` if the
+  3.1 variant of B2 is wanted.
+- [ ] **Set up the HPC.** Fill in the `CHANGE_ME` paths in `scripts/hpc/env.sh`, run
+  `huggingface-cli login`, and `mkdir -p logs`.
+- [ ] **Get the data.** Download the annotations and the 6 fps frames (64 GB; the script asks
+  first), then `sbatch scripts/hpc/prepare_data.sh`.
+- [ ] **Smoke-test on a GPU** before any long job, for example
+  `sbatch scripts/hpc/train.sh configs/b0_dinov3.yaml train.epochs=1`. This checks the image,
+  the `--nv` GPU mount and the real weights.
+- [ ] **Choose the encoder.** Train B0 with DINOv3, BioCLIP 2 and SAM 3, and compare them on
+  validation. Train B1 with the winner (`configs/b1_dinov3.yaml` assumes DINOv3).
+- [ ] **Run B2.** `sbatch scripts/hpc/b2_sam3.sh`, then `scripts/flag_flocks.py` on its
+  predictions, then score every method with the flock flags.
+- [ ] **Review the baseline table** (B0, B1, B2 on the same test frames) before starting
+  Phase 3, the recursive block.
+
+Open decisions:
+
+- **SAM 3 or SAM 3.1 for B2.** SAM 3.1 is released as a video tracking checkpoint, while B2
+  runs the image model per frame, so B2 defaults to SAM 3 weights. `sam3.version: sam3.1`
+  loads 3.1's detector into the image model instead; that path is untested, so check the
+  loading log for missing weights before trusting it.
+- **GPU constraint.** Pin the A100 type in the SLURM scripts (`#SBATCH --constraint=...`) so
+  latency per frame is comparable across methods.
+
 ## MLflow
 
 Runs log to the file store given by `MLFLOW_TRACKING_URI` (set in `scripts/hpc/env.sh` to
