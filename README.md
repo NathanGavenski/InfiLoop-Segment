@@ -26,18 +26,32 @@ Attribution: SA-FARI dataset, Meta and Conservation X Labs,
 
 ## Setup
 
-```bash
-# On the KCL HPC: edit the CHANGE_ME paths in scripts/hpc/env.sh, then
-bash scripts/hpc/build_env.sh            # add --sam3 for baseline B2
-source scripts/hpc/env.sh
+Dependencies are managed with [uv](https://docs.astral.sh/uv/): `pyproject.toml` declares
+them and `uv.lock` pins every version. On the HPC everything runs inside an
+Apptainer/Singularity image built from that lock; the code itself is bound in at run time,
+so only dependency changes need a rebuild.
 
-# Upstream references (InfiLoop and TRM) into third_party/
-bash scripts/fetch_upstream.sh
+```bash
+# Local development
+uv sync --extra sam3          # .venv with the locked versions (drop --extra sam3 if not needed)
+uv run pytest
+
+# Container: build where you have root or fakeroot (about 7 GB), then copy it to the HPC
+bash container/build.sh camtrap.sif          # or: sudo -E bash container/build.sh camtrap.sif
+rsync -P camtrap.sif <hpc>:<WORK_DIR>/containers/
+
+# On the KCL HPC: edit the CHANGE_ME paths in scripts/hpc/env.sh, then
+source scripts/hpc/env.sh                    # defines `run` = apptainer exec --nv ... camtrap.sif
+bash scripts/fetch_upstream.sh               # InfiLoop and TRM references into third_party/
 
 # Data: accept the terms on Hugging Face and run `huggingface-cli login` first
-python scripts/download_safari.py --root $SAFARI_ROOT --annotations
-python scripts/download_safari.py --root $SAFARI_ROOT --frames test train --extract   # asks first
+run python scripts/download_safari.py --root $SAFARI_ROOT --annotations
+run python scripts/download_safari.py --root $SAFARI_ROOT --frames test train --extract   # asks first
 ```
+
+To add or change a dependency: `uv add <pkg>==<version>` (or edit `pyproject.toml` and run
+`uv lock`), commit both files, and rebuild the image. Jobs print a warning when the image was
+built from a different `uv.lock`.
 
 The 6 fps frame tarballs are about 3.7 GB (test) and 60.8 GB (train). The script prints the
 exact size and asks for confirmation before downloading any frames. Point

@@ -14,9 +14,14 @@ ground-truth noun phrases instead. That leaks labels, so report it apart from B2
 Frames are processed independently with the image model, which matches the per-frame task.
 SAM 3 weights are under the SAM License; outputs on SA-FARI are non-commercial.
 
-The sam3 calls live in `Sam3Runner` only. They follow the public sam3 README
-(build_sam3_image_model + Sam3Processor) and are UNVERIFIED here, because the package was
-not installed when this was written. Fix that class if the API differs.
+The sam3 calls live in `Sam3Runner` only. They were checked against the sam3 source at the
+commit pinned in pyproject.toml (build_sam3_image_model, Sam3Processor), but not yet run
+with the real weights.
+
+SAM 3 vs 3.1: the per-frame image model loads `facebook/sam3` (sam3.pt) by default. SAM 3.1
+ships as a video multiplex checkpoint (`facebook/sam3.1`, sam3.1_multiplex.pt). With
+`sam3.version: sam3.1` its detector weights are loaded into the image model; sam3 prints any
+missing keys while loading, so check the log before trusting that variant.
 """
 
 from __future__ import annotations
@@ -40,13 +45,17 @@ from utils.config import load_config  # noqa: E402
 class Sam3Runner:
     """Thin adapter over the sam3 image API: image + text prompts -> (masks, scores)."""
 
-    def __init__(self, checkpoint: str | None, score_threshold: float):
+    def __init__(self, checkpoint: str | None, score_threshold: float, version: str = "sam3"):
         from sam3.model.sam3_image_processor import Sam3Processor
-        from sam3.model_builder import build_sam3_image_model
+        from sam3.model_builder import build_sam3_image_model, download_ckpt_from_hf
 
-        kwargs = {"checkpoint_path": checkpoint} if checkpoint else {}
-        self.model = build_sam3_image_model(**kwargs)
-        self.processor = Sam3Processor(self.model, confidence_threshold=score_threshold)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        if checkpoint is None and version == "sam3.1":
+            checkpoint = download_ckpt_from_hf(version="sam3.1")
+        self.model = build_sam3_image_model(checkpoint_path=checkpoint, device=device)
+        # The processor already drops instances scoring below the threshold.
+        self.processor = Sam3Processor(self.model, device=device,
+                                       confidence_threshold=score_threshold)
         self.threshold = score_threshold
 
     @torch.inference_mode()
@@ -108,7 +117,8 @@ def main() -> None:
         done = set(zip(prev.video_id, prev.frame_idx))
     print(f"{len(frames)} frames in {len(videos)} videos, {len(done)} already done -> {out}")
 
-    runner = Sam3Runner(s3.get("checkpoint"), s3.get("score_threshold", 0.5))
+    runner = Sam3Runner(s3.get("checkpoint"), s3.get("score_threshold", 0.5),
+                        s3.get("version", "sam3"))
     root = Path(d[f"image_root_{split_file}"])
     cuda = torch.cuda.is_available()
     for n, row in enumerate(frames.itertuples(index=False)):

@@ -142,8 +142,8 @@ class BioCLIP2Encoder(FrozenEncoder):
 class SAM3Encoder(FrozenEncoder):
     """SAM 3 perception encoder, fixed at 1008x1008 (stride-14 grid of 72x72).
 
-    UNVERIFIED: written against the public sam3 repository layout without the weights at
-    hand. If `backbone.forward_image` has moved, adjust `tokens` only.
+    `backbone.forward_image` returns the neck's stride-14 map as `vision_features` (checked
+    against the pinned sam3 commit); not yet run with the real weights.
     """
 
     fixed_size = 1008
@@ -153,7 +153,8 @@ class SAM3Encoder(FrozenEncoder):
         super().__init__((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), dtype)
         if model is None:
             from sam3.model_builder import build_sam3_image_model
-            model = build_sam3_image_model(checkpoint_path=checkpoint)
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model = build_sam3_image_model(checkpoint_path=checkpoint, device=device)
         self.backbone = model.backbone
         self.patch_size = 14
         self.embed_dim = 256

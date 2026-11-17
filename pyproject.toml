@@ -1,0 +1,55 @@
+[project]
+name = "camtrap-loop"
+version = "0.1.0"
+description = "InfiLoop animal foreground segmentation for camera trap video (SA-FARI)"
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = [
+    "torch==2.7.1",
+    "torchvision==0.22.1",
+    "numpy==1.26.4",
+    "scipy==1.15.2",
+    "pandas==2.2.3",
+    "pyarrow==19.0.1",
+    "pycocotools==2.0.10",
+    "pillow==11.2.1",
+    "pyyaml==6.0.2",
+    "tqdm==4.67.1",
+    "requests==2.32.3",
+    "huggingface-hub==0.35.3",
+    "transformers==4.56.2",    # DINOv3 support landed in 4.56
+    "open-clip-torch==3.2.0",  # BioCLIP 2 encoder
+    "mlflow==2.22.0",
+    "matplotlib==3.10.1",
+]
+
+[project.optional-dependencies]
+# SAM 3 / 3.1 for baseline B2 and Stage B pseudo-labels (SAM License, gated weights).
+# Pinned to the upstream commit that was HEAD on 2026-11-17.
+sam3 = [
+    "einops==0.8.2",     # undeclared runtime deps of sam3 (its "notebooks" extra)
+    "psutil==7.2.2",
+    "sam3 @ git+https://github.com/facebookresearch/sam3.git@31cb7e624e4fe95301b1be1d4e809111593d2e45",
+    "setuptools<81",  # sam3 imports pkg_resources without declaring it
+]
+
+[dependency-groups]
+dev = ["pytest==8.3.5"]
+
+[tool.uv]
+package = false  # flat layout (data/, models/, train.py); run from the repo root
+
+# CUDA 12.6 wheels for torch on Linux (HPC and container). The wheels bundle the CUDA
+# runtime, so the host only needs an NVIDIA driver.
+[tool.uv.sources]
+torch = { index = "pytorch-cu126", marker = "sys_platform == 'linux'" }
+torchvision = { index = "pytorch-cu126", marker = "sys_platform == 'linux'" }
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

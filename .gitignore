@@ -18,3 +18,5 @@ third_party/
 *.safetensors
 *.tar.gz
 logs/
+*.sif
+.apptainer-tmp/

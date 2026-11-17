@@ -1,0 +1,40 @@
+Bootstrap: docker
+From: ghcr.io/astral-sh/uv:0.9.20-python3.12-bookworm-slim
+
+# Environment only: the code is NOT baked in. Job scripts bind the repository at run time,
+# so code changes never need a rebuild; only pyproject.toml / uv.lock changes do.
+# torch comes from the CUDA 12.6 wheels, which bundle the CUDA runtime; run with --nv so the
+# host's NVIDIA driver is mounted in.
+
+%files
+    pyproject.toml /opt/camtrap/pyproject.toml
+    uv.lock /opt/camtrap/uv.lock
+
+%post
+    set -eu
+    apt-get update
+    apt-get install -y --no-install-recommends git ca-certificates
+    rm -rf /var/lib/apt/lists/*
+    cd /opt/camtrap
+    export UV_PROJECT_ENVIRONMENT=/opt/venv UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 \
+           UV_PYTHON_DOWNLOADS=never UV_NO_CACHE=1
+    # Exactly the locked versions; includes SAM 3 (baseline B2) and pytest.
+    uv sync --frozen --no-install-project --extra sam3
+    sha256sum uv.lock | cut -d' ' -f1 > /opt/camtrap/uv.lock.sha256
+    /opt/venv/bin/python -c "import torch, transformers, open_clip, pycocotools, mlflow, sam3; print('torch', torch.__version__, 'cuda', torch.version.cuda)"
+
+%environment
+    export VIRTUAL_ENV=/opt/venv
+    export PATH=/opt/venv/bin:$PATH
+    export PYTHONNOUSERSITE=1      # ignore ~/.local packages from the bound home directory
+    export PYTHONUNBUFFERED=1      # live SLURM logs
+
+%runscript
+    exec python "$@"
+
+%test
+    /opt/venv/bin/python -c "import torch, sam3; print('ok', torch.__version__)"
+
+%labels
+    project camtrap-loop
+    description Frozen-encoder + InfiLoop camera trap segmentation (SA-FARI, research use only)

@@ -10,5 +10,5 @@
 set -euo pipefail
 source "$(dirname "$0")/env.sh"
 CONFIG="$1"; shift
-nvidia-smi --query-gpu=name,memory.total --format=csv
-python train.py --config "$CONFIG" --set "$@"
+run nvidia-smi --query-gpu=name,memory.total --format=csv
+run python train.py --config "$CONFIG" --set "$@"
