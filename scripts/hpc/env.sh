@@ -38,10 +38,19 @@ run_data() {
 }
 
 # Warn when the image was built from a different lock file than the checked-out code.
-if [ -f "$SIF" ]; then
-  IMG_LOCK="$("$CONTAINER_CMD" exec "$SIF" cat /opt/camtrap/uv.lock.sha256 2>/dev/null || true)"
+# A failed exec must not read as a mismatch: report its error instead, since `run` would fail too.
+if [ -z "$CONTAINER_CMD" ]; then
+  echo "WARNING: neither apptainer nor singularity found (module load failed?); \`run\` will not work" >&2
+elif [ -f "$SIF" ]; then
   REPO_LOCK="$(sha256sum "$PROJECT_DIR/uv.lock" | cut -d' ' -f1)"
-  [ "$IMG_LOCK" = "$REPO_LOCK" ] || echo "WARNING: $SIF was built from a different uv.lock; rebuild it." >&2
+  EXEC_ERR="$(mktemp)"  # apptainer logs INFO/WARNING on stderr even on success: keep it apart
+  if IMG_LOCK="$("$CONTAINER_CMD" exec "$SIF" cat /opt/camtrap/uv.lock.sha256 2>"$EXEC_ERR")"; then
+    [ "$IMG_LOCK" = "$REPO_LOCK" ] || echo "WARNING: $SIF was built from a different uv.lock; rebuild it." >&2
+  else
+    echo "WARNING: could not start $SIF, so the uv.lock check was skipped and \`run\` will fail here:" >&2
+    sed 's/^/  /' "$EXEC_ERR" >&2
+  fi
+  rm -f "$EXEC_ERR"
 else
   echo "WARNING: no image at $SIF; build it with container/build.sh" >&2
 fi
