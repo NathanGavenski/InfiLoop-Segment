@@ -1,0 +1,9 @@
+# Download and indexing only (scripts/download_safari.py, data.sa_fari, resolution_study.py).
+# No torch or CUDA, so these steps run on any node without the image. Versions match
+# pyproject.toml; keep them in step when that changes.
+requests==2.32.3
+huggingface-hub==0.35.3
+numpy==1.26.4
+pandas==2.2.3
+pyarrow==19.0.1
+pycocotools==2.0.10

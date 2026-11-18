@@ -10,7 +10,7 @@
 # Usage: sbatch scripts/hpc/eval.sh configs/b1_dinov3.yaml [split=test]
 # Pin the GPU type (e.g. --constraint) so latency is comparable across methods.
 set -euo pipefail
-source "$(dirname "$0")/env.sh"
+source "${SLURM_SUBMIT_DIR:-$(dirname "$0")/../..}/scripts/hpc/env.sh"  # sbatch runs a copy, so not $0
 CONFIG="$1"; SPLIT="${2:-test}"
 NAME="$(basename "$CONFIG" .yaml)"
 RUN_DIR="$WORK_DIR/outputs/$NAME"

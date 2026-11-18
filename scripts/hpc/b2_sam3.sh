@@ -15,7 +15,7 @@
 #     --index-dir $WORK_DIR/index --out $WORK_DIR/outputs/b2_sam3/metrics_test.json
 #   python scripts/flag_flocks.py --pred $WORK_DIR/outputs/b2_sam3/preds_test.shard*.parquet ...
 set -euo pipefail
-source "$(dirname "$0")/env.sh"
+source "${SLURM_SUBMIT_DIR:-$(dirname "$0")/../..}/scripts/hpc/env.sh"  # sbatch runs a copy, so not $0
 TAG="b2_sam3"; [ "${1:-}" = "--oracle" ] && TAG="b2_sam3_oracle"
 run python scripts/b2_sam3_zero_shot.py --config configs/b2_sam3.yaml --split test "$@" \
   --shard "$SLURM_ARRAY_TASK_ID" --num-shards "${SLURM_ARRAY_TASK_COUNT:-8}" \

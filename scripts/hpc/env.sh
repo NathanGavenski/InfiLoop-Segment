@@ -24,6 +24,19 @@ run() {
     --bind "$PROJECT_DIR,$SAFARI_ROOT,$WORK_DIR" "$SIF" "$@"
 }
 
+# Download and indexing need no torch or CUDA, so they run outside the image in a small uv
+# environment (scripts/hpc/requirements-data.txt). Usage: run_data python scripts/...
+export UV_CACHE_DIR="${UV_CACHE_DIR:-$WORK_DIR/uv_cache}"  # keep the cache off $HOME
+export UV_LINK_MODE=copy                                   # cache and venvs may sit on different filesystems
+run_data() {
+  command -v uv >/dev/null || {
+    echo "uv not found; install it with: curl -LsSf https://astral.sh/uv/install.sh | sh" >&2
+    return 1
+  }
+  uv run --isolated --no-project --python 3.12 \
+    --with-requirements "$PROJECT_DIR/scripts/hpc/requirements-data.txt" "$@"
+}
+
 # Warn when the image was built from a different lock file than the checked-out code.
 if [ -f "$SIF" ]; then
   IMG_LOCK="$("$CONTAINER_CMD" exec "$SIF" cat /opt/camtrap/uv.lock.sha256 2>/dev/null || true)"

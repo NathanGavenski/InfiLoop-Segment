@@ -45,8 +45,9 @@ source scripts/hpc/env.sh                    # defines `run` = apptainer exec --
 bash scripts/fetch_upstream.sh               # InfiLoop and TRM references into third_party/
 
 # Data: accept the terms on Hugging Face and run `huggingface-cli login` first
-run python scripts/download_safari.py --root $SAFARI_ROOT --annotations
-run python scripts/download_safari.py --root $SAFARI_ROOT --frames test train --extract   # asks first
+# run_data = uv env without torch/CUDA (scripts/hpc/requirements-data.txt); needs uv, not the image
+run_data python scripts/download_safari.py --root $SAFARI_ROOT --annotations
+run_data python scripts/download_safari.py --root $SAFARI_ROOT --frames test train --extract   # asks first
 ```
 
 To add or change a dependency: `uv add <pkg>==<version>` (or edit `pyproject.toml` and run
