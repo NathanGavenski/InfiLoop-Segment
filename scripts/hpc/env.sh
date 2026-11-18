@@ -3,8 +3,8 @@
 # executes a command inside the Apptainer/Singularity image with the GPU and data mounted.
 
 export PROJECT_DIR="${PROJECT_DIR:-$HOME/camtrap-loop}"           # this repository
-export SAFARI_ROOT="${SAFARI_ROOT:-/scratch/prj/CHANGE_ME/sa_fari}" # dataset root
-export WORK_DIR="${WORK_DIR:-/scratch/prj/CHANGE_ME/camtrap-loop}"  # outputs, checkpoints, caches
+export SAFARI_ROOT="${SAFARI_ROOT:-/scratch/users/k21158663/sa_fari}" # dataset root
+export WORK_DIR="${WORK_DIR:-/scratch/users/k21158663/camtrap-loop}"  # outputs, checkpoints, caches
 export SIF="${SIF:-$WORK_DIR/containers/camtrap.sif}"               # built by container/build.sh
 
 # MLflow file store on scratch. A plain directory: safe with many SLURM jobs writing at once.

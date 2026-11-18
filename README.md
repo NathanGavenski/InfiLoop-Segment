@@ -38,9 +38,9 @@ uv run pytest
 
 # Container: build where you have root or fakeroot (about 7 GB), then copy it to the HPC
 bash container/build.sh camtrap.sif          # or: sudo -E bash container/build.sh camtrap.sif
-rsync -P camtrap.sif <hpc>:<WORK_DIR>/containers/
+bash scripts/hpc/push_image.sh              # rsync to create:$WORK_DIR/containers/, resumable, checks sha256
 
-# On the KCL HPC: edit the CHANGE_ME paths in scripts/hpc/env.sh, then
+# On the KCL HPC (paths are set in scripts/hpc/env.sh)
 source scripts/hpc/env.sh                    # defines `run` = apptainer exec --nv ... camtrap.sif
 bash scripts/fetch_upstream.sh               # InfiLoop and TRM references into third_party/
 
@@ -82,13 +82,13 @@ initialised encoder (see the comments in that file).
 Phases 0 to 2 are written and unit-tested, but nothing has run on the HPC or with real
 weights yet. In order:
 
-- [ ] **Build the image.** `container/build.sh` needs root or fakeroot. Where neither is
+- [x] **Build the image.** `container/build.sh` needs root or fakeroot. Where neither is
   allowed, run `sudo -E bash container/build.sh camtrap.sif` on a Linux machine (about 7 GB)
   and copy it to `$WORK_DIR/containers/` on the HPC. Try a rootless build on the HPC first.
-- [ ] **Request access on Hugging Face** to the gated weights:
+- [x] **Request access on Hugging Face** to the gated weights:
   `facebook/dinov3-vitl16-pretrain-lvd1689m`, `facebook/sam3`, and `facebook/sam3.1` if the
   3.1 variant of B2 is wanted.
-- [ ] **Set up the HPC.** Fill in the `CHANGE_ME` paths in `scripts/hpc/env.sh`, run
+- [x] **Set up the HPC.** Fill in the `CHANGE_ME` paths in `scripts/hpc/env.sh`, run
   `huggingface-cli login`, and `mkdir -p logs`.
 - [ ] **Get the data.** Download the annotations and the 6 fps frames (64 GB; the script asks
   first), then `sbatch scripts/hpc/prepare_data.sh`.
