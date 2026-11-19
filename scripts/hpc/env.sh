@@ -11,7 +11,7 @@ export SIF="${SIF:-$WORK_DIR/containers/camtrap.sif}"               # built by c
 export MLFLOW_TRACKING_URI="file://$WORK_DIR/mlruns"
 export MLFLOW_ALLOW_FILE_STORE=true   # needed only if MLflow is ever upgraded past 3.x
 export HF_HOME="$WORK_DIR/hf_cache"   # model weights cache on scratch, not in $HOME
-export HF_TOKEN_PATH="$HOME/.cache/huggingface/token"  # token from `huggingface-cli login`
+export HF_TOKEN_PATH="$HOME/.cache/huggingface/token"  # token from `run_data hf auth login`
 export TORCH_HOME="$WORK_DIR/torch_cache"
 
 module load apptainer 2>/dev/null || module load singularity 2>/dev/null || true

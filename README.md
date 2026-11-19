@@ -44,8 +44,9 @@ bash scripts/hpc/push_image.sh              # rsync to create:$WORK_DIR/containe
 source scripts/hpc/env.sh                    # defines `run` = apptainer exec --nv ... camtrap.sif
 bash scripts/fetch_upstream.sh               # InfiLoop and TRM references into third_party/
 
-# Data: accept the terms on Hugging Face and run `huggingface-cli login` first
+# Data: accept the terms of the gated dataset facebook/SA-FARI on Hugging Face, then log in.
 # run_data = uv env without torch/CUDA (scripts/hpc/requirements-data.txt); needs uv, not the image
+run_data hf auth login                       # saves the token where env.sh points HF_TOKEN_PATH
 run_data python scripts/download_safari.py --root $SAFARI_ROOT --annotations
 run_data python scripts/download_safari.py --root $SAFARI_ROOT --frames test train --extract   # asks first
 ```
@@ -90,7 +91,7 @@ weights yet. In order:
   `facebook/dinov3-vitl16-pretrain-lvd1689m`, `facebook/sam3`, and `facebook/sam3.1` if the
   3.1 variant of B2 is wanted.
 - [x] **Set up the HPC.** Fill in the `CHANGE_ME` paths in `scripts/hpc/env.sh`, run
-  `huggingface-cli login`, and `mkdir -p logs`.
+  `run_data hf auth login`, and `mkdir -p logs`.
 - [ ] **Get the data.** Download the annotations and the 6 fps frames (64 GB; the script asks
   first) with `run_data`, no SLURM needed. Then index the annotations on a compute node:
   `sbatch scripts/hpc/prepare_data.sh`, or `bash` it inside an `interactive_cpu` session.

@@ -1,7 +1,7 @@
 """Download SA-FARI annotations (Hugging Face) and the 6 fps frame folders (GCS).
 
 Annotations come from the gated Hugging Face dataset facebook/SA-FARI, so run
-`huggingface-cli login` with an account that has accepted the terms first.
+`hf auth login` (on the HPC: `run_data hf auth login`) with an account that has accepted the terms first.
 
 Frames come from the public bucket gs://cxl-public-camera-trap named on the dataset
 card. Only `JPEGImages_6fps` is fetched; the full-rate `videos/` folders are never
