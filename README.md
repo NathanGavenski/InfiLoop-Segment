@@ -92,7 +92,7 @@ weights yet. In order:
   3.1 variant of B2 is wanted.
 - [x] **Set up the HPC.** Fill in the `CHANGE_ME` paths in `scripts/hpc/env.sh`, run
   `run_data hf auth login`, and `mkdir -p logs`.
-- [ ] **Get the data.** Download the annotations and the 6 fps frames (64 GB; the script asks
+- [x] **Get the data.** Download the annotations and the 6 fps frames (64 GB; the script asks
   first) with `run_data`, no SLURM needed. Then index the annotations on a compute node:
   `sbatch scripts/hpc/prepare_data.sh`, or `bash` it inside an `interactive_cpu` session.
   Indexing needs only the annotations, so it can run while the frames download.

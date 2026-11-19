@@ -137,7 +137,7 @@ def download_frames(root: Path, splits: list[str], extract: bool, assume_yes: bo
         tar_path = root / "tars" / split / o["name"].rsplit("/", 1)[-1]
         download_object(o, tar_path)
         if extract:
-            out = root / f"sa_fari_{split}"
+            out = root / f"sa_fari_{split}"  # tarballs hold sa_fari_XXXXXX/ folders, no JPEGImages_6fps/
             out.mkdir(parents=True, exist_ok=True)
             print(f"  extracting into {out}")
             with tarfile.open(tar_path) as tf:
@@ -168,7 +168,7 @@ def download_sample(root: Path, split: str, n_videos: int) -> None:
           f"{sum(int(o['size']) for o in objs) / 1e6:.1f} MB")
     for o in objs:
         rel = o["name"][len(prefix):]
-        dest = root / f"sa_fari_{split}" / "JPEGImages_6fps" / rel
+        dest = root / f"sa_fari_{split}" / rel  # same layout as the extracted tarballs
         if not dest.exists():
             dest.parent.mkdir(parents=True, exist_ok=True)
             r = requests.get(OBJECT_URL.format(name=o["name"]), timeout=60)

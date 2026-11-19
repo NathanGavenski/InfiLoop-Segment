@@ -1,7 +1,7 @@
 """Phase 0 check: render one SA-FARI frame with its union mask overlaid, to a PNG.
 
     python scripts/render_frame.py --frames $WORK_DIR/index/frames_test.parquet \\
-        --image-root $SAFARI_ROOT/sa_fari_test/JPEGImages_6fps --video sa_fari_000000 --out frame.png
+        --image-root $SAFARI_ROOT/sa_fari_test --video sa_fari_000000 --out frame.png
 """
 
 from __future__ import annotations

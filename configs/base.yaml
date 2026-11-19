@@ -4,8 +4,8 @@ output_dir: ${WORK_DIR}/outputs   # expanded by the job scripts; set explicitly 
 
 data:
   index_dir: ${WORK_DIR}/index                       # frames_*.parquet, instances_*.parquet
-  image_root_train: ${SAFARI_ROOT}/sa_fari_train/JPEGImages_6fps
-  image_root_test: ${SAFARI_ROOT}/sa_fari_test/JPEGImages_6fps
+  image_root_train: ${SAFARI_ROOT}/sa_fari_train   # holds the sa_fari_XXXXXX/ video folders (6 fps)
+  image_root_test: ${SAFARI_ROOT}/sa_fari_test
   long_side: 1344          # Phase 1 study: smallest long side with >= 99% of train instances >= 1 patch
   square: false
   frames_per_video: 4      # per epoch; neighbouring 6 fps frames are near duplicates
