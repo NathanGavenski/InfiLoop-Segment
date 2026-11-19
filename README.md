@@ -92,7 +92,9 @@ weights yet. In order:
 - [x] **Set up the HPC.** Fill in the `CHANGE_ME` paths in `scripts/hpc/env.sh`, run
   `huggingface-cli login`, and `mkdir -p logs`.
 - [ ] **Get the data.** Download the annotations and the 6 fps frames (64 GB; the script asks
-  first), then `sbatch scripts/hpc/prepare_data.sh`.
+  first) with `run_data`, no SLURM needed. Then index the annotations on a compute node:
+  `sbatch scripts/hpc/prepare_data.sh`, or `bash` it inside an `interactive_cpu` session.
+  Indexing needs only the annotations, so it can run while the frames download.
 - [ ] **Smoke-test on a GPU** before any long job, for example
   `sbatch scripts/hpc/train.sh configs/b0_dinov3.yaml train.epochs=1`. This checks the image,
   the `--nv` GPU mount and the real weights.
