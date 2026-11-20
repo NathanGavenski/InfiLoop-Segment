@@ -12,7 +12,7 @@
 #SBATCH --mail-user=nathan.schneider_gavenski@kcl.ac.uk
 # Predict on the test split at batch size 1 (per-frame latency), then score with all strata.
 # Usage: sbatch scripts/hpc/eval.sh configs/b1_dinov3.yaml [split=test]
-# Pin the GPU type (e.g. --constraint) so latency is comparable across methods.
+# Latency is comparable across methods because the job is pinned to a100 above.
 set -euo pipefail
 source "${SLURM_SUBMIT_DIR:-$(dirname "$0")/../..}/scripts/hpc/env.sh"  # sbatch runs a copy, so not $0
 CONFIG="$1"; SPLIT="${2:-test}"
