@@ -2,6 +2,7 @@
 #SBATCH --job-name=camtrap-eval
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
+#SBATCH --constraint=a100|h200|l40s   # not b200: torch cu126 has no sm_100 kernels
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=12:00:00
