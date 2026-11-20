@@ -2,8 +2,8 @@
 #SBATCH --job-name=camtrap-eval
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
-# Not b200: the image's torch (cu126) has no sm_100 kernels.
-#SBATCH --constraint=a100|h200|l40s
+# A100 only: this job measures per-frame latency, which must be comparable across methods.
+#SBATCH --constraint=a100
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=12:00:00

@@ -81,8 +81,8 @@ initialised encoder (see the comments in that file).
 
 ## Next steps
 
-Phases 0 to 2 are written and unit-tested, but nothing has run on the HPC or with real
-weights yet. In order:
+Phases 0 to 2 are written and unit-tested, and the pipeline has run end to end on the HPC.
+In order:
 
 - [x] **Build the image.** `container/build.sh` needs root or fakeroot. Where neither is
   allowed, run `sudo -E bash container/build.sh camtrap.sif` on a Linux machine (about 7 GB)
@@ -96,9 +96,10 @@ weights yet. In order:
   first) with `run_data`, no SLURM needed. Then index the annotations on a compute node:
   `sbatch scripts/hpc/prepare_data.sh`, or `bash` it inside an `interactive_cpu` session.
   Indexing needs only the annotations, so it can run while the frames download.
-- [ ] **Smoke-test on a GPU** before any long job, for example
+- [x] **Smoke-test on a GPU** before any long job, for example
   `sbatch scripts/hpc/train.sh configs/b0_dinov3.yaml train.epochs=1`. This checks the image,
-  the `--nv` GPU mount and the real weights.
+  the `--nv` GPU mount and the real weights. Done 2026-11-20 on an L40S: B0 DINOv3, 1 epoch,
+  best val mean IoU 0.6661 (MLflow run `91c3853b23d74334b0fc5f6e39fa9130`).
 - [ ] **Choose the encoder.** Train B0 with DINOv3, BioCLIP 2 and SAM 3, and compare them on
   validation. Train B1 with the winner (`configs/b1_dinov3.yaml` assumes DINOv3).
 - [ ] **Run B2.** `sbatch scripts/hpc/b2_sam3.sh`, then `scripts/flag_flocks.py` on its
@@ -112,8 +113,9 @@ Open decisions:
   runs the image model per frame, so B2 defaults to SAM 3 weights. `sam3.version: sam3.1`
   loads 3.1's detector into the image model instead; that path is untested, so check the
   loading log for missing weights before trusting it.
-- **GPU constraint.** Pin the A100 type in the SLURM scripts (`#SBATCH --constraint=...`) so
-  latency per frame is comparable across methods.
+- **GPU constraint (settled).** `eval.sh` and `b2_sam3.sh` measure per-frame latency, so they
+  are pinned to `a100` (40 GB) to keep it comparable across methods. `train.sh` takes any of
+  `a100|h200|l40s`. The B200 node is excluded everywhere: torch cu126 has no sm_100 kernels.
 
 ## MLflow
 
