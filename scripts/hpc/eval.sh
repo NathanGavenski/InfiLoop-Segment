@@ -8,6 +8,8 @@
 #SBATCH --mem=64G
 #SBATCH --time=12:00:00
 #SBATCH --output=logs/%x-%j.out
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=nathan.schneider_gavenski@kcl.ac.uk
 # Predict on the test split at batch size 1 (per-frame latency), then score with all strata.
 # Usage: sbatch scripts/hpc/eval.sh configs/b1_dinov3.yaml [split=test]
 # Pin the GPU type (e.g. --constraint) so latency is comparable across methods.

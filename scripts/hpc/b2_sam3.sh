@@ -9,6 +9,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --array=0-7
 #SBATCH --output=logs/%x-%A_%a.out
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=nathan.schneider_gavenski@kcl.ac.uk
 # Zero-shot SAM 3 baseline, sharded over videos.
 #   sbatch scripts/hpc/b2_sam3.sh            # prompt "animal"
 #   sbatch scripts/hpc/b2_sam3.sh --oracle   # GT species prompts, report separately

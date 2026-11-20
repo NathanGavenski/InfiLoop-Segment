@@ -8,6 +8,8 @@
 #SBATCH --mem=64G
 #SBATCH --time=48:00:00
 #SBATCH --output=logs/%x-%j.out
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=nathan.schneider_gavenski@kcl.ac.uk
 # Train one baseline. Usage: sbatch scripts/hpc/train.sh configs/b1_dinov3.yaml [a.b=c ...]
 set -euo pipefail
 source "${SLURM_SUBMIT_DIR:-$(dirname "$0")/../..}/scripts/hpc/env.sh"  # sbatch runs a copy, so not $0

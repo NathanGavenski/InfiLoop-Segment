@@ -5,6 +5,8 @@
 #SBATCH --mem=48G
 #SBATCH --time=04:00:00
 #SBATCH --output=logs/%x-%j.out
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=nathan.schneider_gavenski@kcl.ac.uk
 # Indexing, not downloading: builds frame tables and instance indexes for train (with the
 # committed val split) and test from the annotation files, then runs the resolution study.
 # Needs only the annotations, not the frames, and runs outside the image (run_data, no torch).

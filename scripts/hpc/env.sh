@@ -54,4 +54,28 @@ elif [ -f "$SIF" ]; then
 else
   echo "WARNING: no image at $SIF; build it with container/build.sh" >&2
 fi
+
+# In sbatch jobs, email the end of the job's log on exit, to the job's --mail-user. SLURM's own
+# BEGIN/END/FAIL mails carry no log. Interactive (srun) sessions are skipped. Turn off with
+# MAIL_LOG=0. Time-limit kills may skip the trap; SLURM's FAIL mail still covers those.
+mail_log() {
+  local status=$? info to log sendmail
+  info="$(scontrol show job -o "$SLURM_JOB_ID" 2>/dev/null)" || return 0
+  to="$(grep -o 'MailUser=[^ ]*' <<<"$info" | cut -d= -f2 || true)"
+  log="$(grep -o 'StdOut=[^ ]*' <<<"$info" | cut -d= -f2 || true)"
+  sendmail="$(command -v sendmail || echo /usr/sbin/sendmail)"
+  [ -n "$to" ] && [ -f "$log" ] && [ -x "$sendmail" ] || return 0
+  {
+    printf 'To: %s\nSubject: [%s] %s %s exited %s on %s\n\n' "$to" "$SLURM_JOB_NAME" \
+      "${SLURM_ARRAY_JOB_ID:+array $SLURM_ARRAY_JOB_ID task $SLURM_ARRAY_TASK_ID, }job" \
+      "$SLURM_JOB_ID" "$status" "$(hostname -s)"
+    echo "Last 200 lines of $log"; echo
+    tr '\r' '\n' <"$log" | tail -n 200   # tqdm redraws with \r: split into lines first
+  } | "$sendmail" -t || echo "mail_log: sendmail failed" >&2
+  return 0
+}
+if [ -n "${SLURM_JOB_ID:-}" ] && [ "${MAIL_LOG:-1}" != 0 ] &&
+   scontrol show job -o "$SLURM_JOB_ID" 2>/dev/null | grep -q 'BatchFlag=1'; then
+  trap mail_log EXIT
+fi
 cd "$PROJECT_DIR"
